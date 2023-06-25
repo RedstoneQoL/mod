@@ -108,10 +108,9 @@ public class ReflectionUtils {
                 .collect(Collectors.toSet());
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> @Nullable Class<? extends T> loadClass(String className) {
+    private static @Nullable Class<?> loadClass(String className) {
         try {
-            return (Class<? extends T>) Class.forName(className);
+            return Class.forName(className);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Failed to load class " + className, e);
         } catch (NoClassDefFoundError e) {
