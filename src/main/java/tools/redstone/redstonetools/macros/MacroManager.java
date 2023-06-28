@@ -2,6 +2,7 @@ package tools.redstone.redstonetools.macros;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
+import tools.redstone.redstonetools.RedstoneToolsClient;
 import tools.redstone.redstonetools.macros.actions.Action;
 import tools.redstone.redstonetools.macros.actions.CommandAction;
 
@@ -104,6 +105,7 @@ public class MacroManager {
         return Json.createObjectBuilder()
                 .add("name", macro.name)
                 .add("enabled", macro.enabled)
+                .add("output", macro.output)
                 .add("key", macro.getKey().getTranslationKey())
                 .add("actions", actionsJson)
                 .build();
@@ -141,7 +143,7 @@ public class MacroManager {
             actions[i] = new CommandAction(commands[i]);
         }
 
-        return new Macro(name, true, InputUtil.UNKNOWN_KEY, List.of(actions));
+        return new Macro(name, true, InputUtil.UNKNOWN_KEY, List.of(actions), true);
     }
 
     private List<Macro> getMacrosFromJson(JsonArray macrosJson) {
@@ -157,10 +159,11 @@ public class MacroManager {
     private Macro getMacroFromJson(JsonObject macroJson) {
         var name = macroJson.getString("name");
         var enabled = macroJson.getBoolean("enabled");
+        var output = macroJson.getBoolean("output");
         var key = macroJson.getString("key");
         var actions = getActionsFromJson(macroJson.getJsonArray("actions"));
 
-        return new Macro(name, enabled, InputUtil.fromTranslationKey(key), actions);
+        return new Macro(name, enabled, InputUtil.fromTranslationKey(key), actions, output);
     }
 
     private List<Action> getActionsFromJson(JsonArray actionsJson) {

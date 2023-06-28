@@ -13,6 +13,9 @@
     "features.CopyStateMixin",
     "features.ItemBindMixin$ItemStackMixin",
     "gamerules.DoContainerDropsMixin",
+    "macros.DisableCommandOutputMixin",
+    "telemetry.SendCommandMixin",
+    "telemetry.ShowTelemetryPopupMixin"
   ],
   "client": [
     "accessors.MinecraftClientAccessor",

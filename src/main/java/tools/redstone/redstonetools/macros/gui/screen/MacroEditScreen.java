@@ -1,8 +1,8 @@
 package tools.redstone.redstonetools.macros.gui.screen;
 
 import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.gui.widget.*;
+import net.minecraft.loot.function.EnchantRandomlyLootFunction;
 import tools.redstone.redstonetools.macros.Macro;
 import tools.redstone.redstonetools.macros.MacroManager;
 import tools.redstone.redstonetools.macros.actions.Action;
@@ -14,8 +14,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.InputUtil.Key;
@@ -39,7 +37,7 @@ public class MacroEditScreen extends GameOptionsScreen {
     private TextFieldWidget nameField;
     private ButtonWidget doneButton;
     private ButtonWidget keyBindButton;
-
+    private CheckboxWidget outputToggle;
     private boolean overlapped = false;
     private boolean detectingKeycodeKey = false;
 
@@ -94,7 +92,7 @@ public class MacroEditScreen extends GameOptionsScreen {
         if (keyCode == InputUtil.UNKNOWN_KEY) text = Text.of("");
         if ( KeyBindingUtils.isKeyAlreadyBound(keyCode) ) { text = new LiteralText(text.getString()).formatted(Formatting.RED); }
 
-        keyBindButton = new ButtonWidget(this.width / 2 + 26, 55, 75, 20, text, (button) -> {
+        keyBindButton = new ButtonWidget(this.width / 2 - 80, 55, 75, 20, text, (button) -> {
             detectingKeycodeKey = true;
             keyBindButton.setMessage((new LiteralText("> ")).append(keyBindButton.getMessage().shallowCopy().formatted(Formatting.YELLOW)).append(" <").formatted(Formatting.YELLOW));
         });
@@ -130,6 +128,8 @@ public class MacroEditScreen extends GameOptionsScreen {
         commandList.setScrollAmount(scrollAmount);
 
         this.addSelectableChild(commandList);
+        outputToggle = new CheckboxWidget(this.width / 2 + 168 - 20, 55, 20, 20, null, macro.output, false);
+        this.addDrawableChild(outputToggle);
     }
 
     private boolean canClickDone() {
@@ -149,7 +149,8 @@ public class MacroEditScreen extends GameOptionsScreen {
 
         drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 16777215);
 
-        drawCenteredText(matrices, this.textRenderer, "Key Bind", width / 2 - (99 - textRenderer.getWidth("Key Bind") / 2), 55 + textRenderer.fontHeight / 2, 16777215);
+        drawCenteredText(matrices, this.textRenderer, "Key Bind", width / 2 - (168 - textRenderer.getWidth("Key Bind") / 2), 55 + textRenderer.fontHeight / 2, 16777215);
+        drawCenteredText(matrices, this.textRenderer, "Command Output", width / 2 + (textRenderer.getWidth("Command Output") / 2) + 5,  55+ textRenderer.fontHeight / 2, 16777215);
         nameField.render(matrices, mouseX, mouseY, delta);
 
         if (nameField.getText().isEmpty() && !nameField.isFocused()) {
@@ -163,6 +164,7 @@ public class MacroEditScreen extends GameOptionsScreen {
     public void tick() {
         nameField.tick();
         commandList.tick();
+        macro.output = outputToggle.isChecked();
 
         super.tick();
     }

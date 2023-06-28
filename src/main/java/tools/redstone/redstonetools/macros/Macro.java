@@ -15,29 +15,31 @@ import java.util.List;
 public class Macro {
 
     public static Macro buildEmpty() {
-        return new Macro("",true,InputUtil.UNKNOWN_KEY,new ArrayList<>());
+        return new Macro("",true,InputUtil.UNKNOWN_KEY, new ArrayList<>(), true);
     }
 
     private KeyBinding keyBinding;
     public String name;
     private Key key;
     public boolean enabled;
+    public boolean output;
     public List<Action> actions;
 
     private final Macro original;
 
-    public Macro(String name, boolean enabled, Key key, List<Action> actions) {
-        this(name,enabled,key,actions,null);
+    public Macro(String name, boolean enabled, Key key, List<Action> actions, boolean output) {
+        this(name,enabled,key,actions,output,null);
         keyBinding = new KeyBinding("macro." + System.nanoTime(),-1,"macros");
         registerKeyBinding();
         changeKeyBindingKeyCode();
     }
 
-    public Macro(String name, boolean enabled, Key key, List<Action> actions, Macro original) {
+    public Macro(String name, boolean enabled, Key key, List<Action> actions, boolean output, Macro original) {
         this.name = name;
         this.enabled = enabled;
         this.key = key;
         this.actions = actions;
+        this.output = output;
         this.original = original;
     }
 
@@ -59,7 +61,13 @@ public class Macro {
         }
 
         for (Action action : actions) {
-            action.run();
+            if (output){
+                action.run();
+            }
+            else{
+                action.runSilent();
+            }
+
         }
     }
 
@@ -70,6 +78,7 @@ public class Macro {
         original.enabled = enabled;
         original.setKey(key);
         original.actions = new ArrayList<>(actions);
+        original.output = output;
     }
 
     public boolean isCopy(){
@@ -99,7 +108,7 @@ public class Macro {
     }
 
     public Macro createCopy() {
-        return new Macro(name,enabled,key,new ArrayList<>(actions),this);
+        return new Macro(name,enabled,key,new ArrayList<>(actions),output,this);
     }
 
     public void unregisterKeyBinding(){
@@ -123,7 +132,7 @@ public class Macro {
                 if (!actions.get(i).equals(macro.actions.get(i))) return false;
             }
 
-            return macro.name.equals(name) && macro.key.equals(key) && macro.enabled == enabled;
+            return macro.name.equals(name) && macro.key.equals(key) && macro.enabled == enabled && macro.output == output;
         }
 
         return super.equals(obj);
