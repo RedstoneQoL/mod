@@ -10,7 +10,7 @@ import tools.redstone.redstonetools.features.feedback.Feedback;
 import tools.redstone.redstonetools.utils.WorldEditUtils;
 
 @AutoService(AbstractFeature.class)
-@Feature(name = "Update", description = "Forces block updates in the selected area.", command = "/update")
+@Feature(name = "Update", description = "Forces block updates in the selected area.", command = "/update", worldedit = true)
 public class UpdateFeature extends CommandFeature {
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
