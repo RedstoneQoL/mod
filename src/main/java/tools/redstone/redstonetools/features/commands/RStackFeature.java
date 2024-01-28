@@ -1,11 +1,6 @@
 package tools.redstone.redstonetools.features.commands;
 
 import com.google.auto.service.AutoService;
-import tools.redstone.redstonetools.features.AbstractFeature;
-import tools.redstone.redstonetools.features.Feature;
-import tools.redstone.redstonetools.features.arguments.Argument;
-import tools.redstone.redstonetools.features.feedback.Feedback;
-import tools.redstone.redstonetools.utils.DirectionArgument;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.sk89q.worldedit.IncompleteRegionException;
 import com.sk89q.worldedit.WorldEdit;
@@ -19,6 +14,11 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import net.minecraft.server.command.ServerCommandSource;
 import org.jetbrains.annotations.Nullable;
+import tools.redstone.redstonetools.features.AbstractFeature;
+import tools.redstone.redstonetools.features.Feature;
+import tools.redstone.redstonetools.features.arguments.Argument;
+import tools.redstone.redstonetools.features.feedback.Feedback;
+import tools.redstone.redstonetools.utils.DirectionArgument;
 
 import static tools.redstone.redstonetools.features.arguments.serializers.DirectionSerializer.direction;
 import static tools.redstone.redstonetools.features.arguments.serializers.IntegerSerializer.integer;
@@ -42,7 +42,7 @@ public class RStackFeature extends CommandFeature {
 
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
-        var actor = FabricAdapter.adaptPlayer(source.getPlayer());
+        var actor = FabricAdapter.adaptPlayer(source.getPlayerOrThrow());
 
         var localSession = WorldEdit.getInstance()
                 .getSessionManager()
@@ -76,15 +76,13 @@ public class RStackFeature extends CommandFeature {
 
         var stackVector = directionToBlock(stackDirection);
 
-
         try (var editSession = localSession.createEditSession(actor)) {
             for (var i = 1; i <= count.getValue(); i++) {
                 var copy = new ForwardExtentCopy(
                         editSession,
                         selection,
                         editSession,
-                        selection.getMinimumPoint().add(stackVector.multiply(i * offset.getValue()))
-                );
+                        selection.getMinimumPoint().add(stackVector.multiply(i * offset.getValue())));
                 copy.setSourceMask(airFilter);
                 Operations.complete(copy);
             }

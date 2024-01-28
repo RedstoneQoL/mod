@@ -5,6 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.argument.serialize.ArgumentSerializer;
 import net.minecraft.text.Text;
 import tools.redstone.redstonetools.utils.NumberBase;
 
@@ -13,13 +15,13 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class IntLikeSerializer<T extends Comparable<T>> extends TypeSerializer<T, String> {
-    private final T min;
+public abstract class IntLikeArgumentType<T extends Comparable<T>> extends GenericArgumentType<T, String> {
+    final T min;
     private final boolean hasMin;
-    private final T max;
+    final T max;
     private final boolean hasMax;
 
-    protected IntLikeSerializer(Class<T> clazz, T min, T max) {
+    protected IntLikeArgumentType(Class<T> clazz, T min, T max) {
         super(clazz);
 
         this.min = min;
@@ -58,23 +60,24 @@ public abstract class IntLikeSerializer<T extends Comparable<T>> extends TypeSer
             return tryParse(serialized);
         }
 
-        if(serialized.charAt(0) == '-' && serialized.chars().filter(ch -> ch == '-').count() == 1){
+        if (serialized.charAt(0) == '-' && serialized.chars().filter(ch -> ch == '-').count() == 1) {
             isNegative = true;
-            serialized = serialized.replace("-","");
+            serialized = serialized.replace("-", "");
         }
 
         if (serialized.charAt(0) == '0') {
-            if(serialized.length() > 1) {
+            if (serialized.length() > 1) {
                 var prefixedBase = serialized.substring(0, 2);
                 var number = serialized.substring(2);
 
                 var numberBase = NumberBase.fromPrefix(prefixedBase).orElse(null);
 
                 if (numberBase != null) {
-                    return isNegative ? tryParse("-" + number, numberBase.toInt()) : tryParse(number, numberBase.toInt());
+                    return isNegative ? tryParse("-" + number, numberBase.toInt())
+                            : tryParse(number, numberBase.toInt());
                 }
             } else {
-                return tryParse(serialized,10);
+                return tryParse(serialized, 10);
             }
         }
 
@@ -93,10 +96,10 @@ public abstract class IntLikeSerializer<T extends Comparable<T>> extends TypeSer
                 throw new IllegalArgumentException("Invalid base '" + parts[1] + "'.");
             }
 
-            return isNegative ? tryParse("-"+number, base) : tryParse(number, base);
+            return isNegative ? tryParse("-" + number, base) : tryParse(number, base);
         }
 
-        return isNegative ? tryParse("-"+serialized) : tryParse(serialized);
+        return isNegative ? tryParse("-" + serialized) : tryParse(serialized);
     }
 
     private T tryParse(String string) {
@@ -106,8 +109,8 @@ public abstract class IntLikeSerializer<T extends Comparable<T>> extends TypeSer
     private T tryParse(String string, int radix) {
         return tryParseOptional(string, radix)
                 .orElseThrow(() -> new IllegalArgumentException(radix == 10
-                    ? "Invalid number '" + string + "'."
-                    : "Invalid base " + radix + " number '" + string + "'."));
+                        ? "Invalid number '" + string + "'."
+                        : "Invalid base " + radix + " number '" + string + "'."));
     }
 
     protected abstract Optional<T> tryParseOptional(String string, int radix);
@@ -126,4 +129,30 @@ public abstract class IntLikeSerializer<T extends Comparable<T>> extends TypeSer
     public <R> CompletableFuture<Suggestions> listSuggestions(CommandContext<R> context, SuggestionsBuilder builder) {
         return builder.buildFuture();
     }
+
+//    public static abstract class IntLikeSerializer extends Serializer<IntLikeArgumentType<T>, ArgumentSerializer.ArgumentTypeProperties<IntLikeArgumentType<T>>>{
+//
+//        @Override
+//        public ArgumentTypeProperties<IntLikeArgumentType<T>> getArgumentTypeProperties(IntLikeArgumentType<T> argumentType) {
+//            return new Properties(argumentType.max,argumentType.min);
+//        }
+//
+//        public abstract class Properties implements ArgumentTypeProperties<IntLikeArgumentType<T>>{
+//
+//            final T max, min;
+//
+//            public Properties(T max, T min) {
+//                this.max = max;
+//                this.min = min;
+//            }
+//
+//            @Override
+//            public abstract IntLikeArgumentType<T> createType(CommandRegistryAccess commandRegistryAccess);
+//
+//            @Override
+//            public ArgumentSerializer<IntLikeArgumentType<T>, ?> getSerializer() {
+//                return IntLikeSerializer.this;
+//            }
+//        }
+//    }
 }

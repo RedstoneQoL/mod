@@ -7,6 +7,7 @@ import tools.redstone.redstonetools.features.arguments.Argument;
 import tools.redstone.redstonetools.features.feedback.Feedback;
 import tools.redstone.redstonetools.utils.BlockColor;
 import tools.redstone.redstonetools.utils.BlockInfo;
+import tools.redstone.redstonetools.utils.ColoredBlock;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.command.ServerCommandSource;

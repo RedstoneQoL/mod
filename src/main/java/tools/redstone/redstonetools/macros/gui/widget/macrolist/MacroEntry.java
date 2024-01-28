@@ -1,14 +1,14 @@
 package tools.redstone.redstonetools.macros.gui.widget.macrolist;
 
-import tools.redstone.redstonetools.macros.Macro;
-import tools.redstone.redstonetools.macros.gui.widget.IconButtonWidget;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import tools.redstone.redstonetools.macros.Macro;
+import tools.redstone.redstonetools.macros.gui.widget.IconButtonWidget;
 
 public class MacroEntry extends AlwaysSelectedEntryListWidget.Entry<MacroEntry>{
 
@@ -24,20 +24,25 @@ public class MacroEntry extends AlwaysSelectedEntryListWidget.Entry<MacroEntry>{
         this.macro = macro;
         this.owner = owner;
 
-        buttonWidget = new CheckboxWidget(0, 0, 20, 20, null, macro.enabled, false);
+        buttonWidget =  CheckboxWidget.builder(Text.empty(), MinecraftClient.getInstance().textRenderer).build();
+
+        if (buttonWidget.isChecked() != macro.enabled) {
+            buttonWidget.onPress();
+        }
+
         deleteButton = new IconButtonWidget(IconButtonWidget.CROSS_ICON,0, 0, 20, 20 ,Text.of(""), (button) -> {
             deleteIfConfirmed();
-        });
+        },null);
         editButton = new IconButtonWidget(IconButtonWidget.PENCIL_ICON,0, 0, 20, 20, Text.of(""), (button) -> {
             owner.parent.openEditScreen(this);
-        });
+        },null);
     }
 
 
-    public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-        renderWidget(buttonWidget,matrices,mouseX,mouseY,tickDelta,x-30,y-2);
-        renderWidget(editButton,matrices,mouseX,mouseY,tickDelta,x+entryWidth,y-2);
-        renderWidget(deleteButton,matrices,mouseX,mouseY,tickDelta,x+entryWidth+22,y-2);
+    public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        renderWidget(buttonWidget,context,mouseX,mouseY,tickDelta,x-30,y-2);
+        renderWidget(editButton,context,mouseX,mouseY,tickDelta,x+entryWidth,y-2);
+        renderWidget(deleteButton,context,mouseX,mouseY,tickDelta,x+entryWidth+22,y-2);
 
         String text = macro.name;
 
@@ -49,14 +54,13 @@ public class MacroEntry extends AlwaysSelectedEntryListWidget.Entry<MacroEntry>{
             text += "...";
         }
 
-
-        owner.client.textRenderer.drawWithShadow(matrices, text, x, y+3,macro.enabled?16777215:8355711, true);
+        context.drawTextWithShadow(owner.client.textRenderer,text,x,y+3,macro.enabled?16777215:8355711);
     }
 
-    private void renderWidget(PressableWidget widget, MatrixStack matrices, int mouseX, int mouseY, float tickDelta, int x, int y) {
-        widget.x = x;
-        widget.y = y;
-        widget.render(matrices,mouseX,mouseY,tickDelta);
+    private void renderWidget(PressableWidget widget, DrawContext context, int mouseX, int mouseY, float tickDelta, int x, int y) {
+        widget.setX(x);
+        widget.setY(y);
+        widget.render(context,mouseX,mouseY,tickDelta);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -94,7 +98,7 @@ public class MacroEntry extends AlwaysSelectedEntryListWidget.Entry<MacroEntry>{
     }
 
     public Text getNarration() {
-        return new TranslatableText("narrator.select");
+        return Text.translatable("narrator.select");
     }
 
 

@@ -10,11 +10,14 @@ import tools.redstone.redstonetools.utils.RaycastUtils;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import static tools.redstone.redstonetools.features.arguments.serializers.BoolSerializer.bool;
 import static tools.redstone.redstonetools.features.arguments.serializers.FloatSerializer.floatArg;
+
 
 @AutoService(AbstractFeature.class)
 @Feature(name = "Quick TP", description = "Teleports you in the direction you are looking.", command = "quicktp")
@@ -28,7 +31,7 @@ public class QuickTpFeature extends CommandFeature {
 
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
-        var player = source.getPlayer();
+        var player = source.getPlayerOrThrow();
 
         var targetPosition = getTargetPosition(player);
 

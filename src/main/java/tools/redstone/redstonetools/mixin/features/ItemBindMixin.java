@@ -1,8 +1,7 @@
 package tools.redstone.redstonetools.mixin.features;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
@@ -53,22 +52,24 @@ public abstract class ItemBindMixin {
             NbtCompound nbt = getNbt();
             if (nbt == null || !nbt.contains("command")) return false;
             NbtString command = (NbtString) nbt.get("command");
-            MinecraftClient.getInstance().player.sendChatMessage(command.asString());
+            MinecraftClient.getInstance().getNetworkHandler().sendChatCommand(command.asString());
 
             return true;
         }
     }
 
-    @Mixin(ClientPlayerEntity.class)
-    private abstract static class PlayerMixin {
 
-        @Inject(method = "sendChatMessage", at = @At("HEAD"), cancellable = true)
+    @Mixin(ClientPlayNetworkHandler.class)
+    private abstract static class NetworkHandlerMixin {
+
+        @Inject(method = "sendChatCommand", at = @At("HEAD"), cancellable = true)
         public void injectCommand(String message, CallbackInfo ci) {
-            if (!message.startsWith("/") || !ItemBindFeature.waitingForCommand) return;
+            if (!ItemBindFeature.waitingForCommand) return;
 
             Feedback addCommandFeedback = ItemBindFeature.addCommand(message);
             if (addCommandFeedback != null) {
-                INJECTOR.getInstance(FeedbackSender.class).sendFeedback(((Entity) ((Object)this)).getCommandSource(),addCommandFeedback);
+                INJECTOR.getInstance(FeedbackSender.class).sendFeedback(
+                        MinecraftClient.getInstance().getServer().getCommandSource(), addCommandFeedback);
                 ci.cancel();
             }
         }

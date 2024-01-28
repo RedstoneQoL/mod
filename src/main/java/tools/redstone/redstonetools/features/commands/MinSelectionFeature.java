@@ -1,17 +1,24 @@
 package tools.redstone.redstonetools.features.commands;
 
+
 import com.google.auto.service.AutoService;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import tools.redstone.redstonetools.features.AbstractFeature;
 import tools.redstone.redstonetools.features.Feature;
 import tools.redstone.redstonetools.features.feedback.Feedback;
 import tools.redstone.redstonetools.utils.WorldEditUtils;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.datafixers.util.Either;
+import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.fabric.FabricAdapter;
+import com.sk89q.worldedit.fabric.FabricPlayer;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.regions.RegionOperationException;
+import com.sk89q.worldedit.regions.RegionSelector;
 import com.sk89q.worldedit.world.World;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import net.minecraft.server.command.ServerCommandSource;
@@ -26,7 +33,7 @@ public class MinSelectionFeature extends CommandFeature {
 
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
-        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayer());
+        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayerOrThrow());
         if (selectionOrFeedback.right().isPresent()) {
             return selectionOrFeedback.right().get();
         }
@@ -35,7 +42,7 @@ public class MinSelectionFeature extends CommandFeature {
         var selection = selectionOrFeedback.left().get();
         var selectionWorld = selection.getWorld();
 
-        var actor = FabricAdapter.adaptPlayer(source.getPlayer());
+        var actor = FabricAdapter.adaptPlayer(source.getPlayerOrThrow());
 
         var localSession = WorldEdit.getInstance()
                 .getSessionManager()
@@ -52,7 +59,6 @@ public class MinSelectionFeature extends CommandFeature {
         if (isEmpty) {
             return Feedback.invalidUsage("Cannot minimize empty selections.");
         }
-            
 
         minimiseSelection(selectionWorld, selection);
 
@@ -94,7 +100,7 @@ public class MinSelectionFeature extends CommandFeature {
         try {
             selection.contract(changes.toArray(new BlockVector3[changes.size()]));
         } catch (RegionOperationException e) {
-            throw new net.minecraft.command.CommandException(Text.of("There was an error modifying the region."));
+            throw new SimpleCommandExceptionType(Text.of("There was an error modifying the region.")).create();
         }
 
         if (!finished)

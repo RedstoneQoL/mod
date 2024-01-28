@@ -1,10 +1,13 @@
 package tools.redstone.redstonetools.features.arguments.serializers;
 
+import com.google.auto.service.AutoService;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.command.argument.serialize.ArgumentSerializer;
 import net.minecraft.text.Text;
 import tools.redstone.redstonetools.utils.NumberBase;
 
@@ -12,15 +15,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
-public class NumberBaseSerializer extends TypeSerializer<Integer, String> {
+@AutoService(GenericArgumentType.class)
+public class NumberBaseArgumentType extends GenericArgumentType<Integer, String> {
     private static final IntegerSerializer INT_SERIALIZER = IntegerSerializer.integer(2, 36);
-    private static final NumberBaseSerializer INSTANCE = new NumberBaseSerializer();
+    private static final NumberBaseArgumentType INSTANCE = new NumberBaseArgumentType();
 
-    public static NumberBaseSerializer numberBase() {
+    public static NumberBaseArgumentType numberBase() {
         return INSTANCE;
     }
 
-    protected NumberBaseSerializer() {
+    protected NumberBaseArgumentType() {
         super(Integer.class);
     }
 
@@ -72,4 +76,29 @@ public class NumberBaseSerializer extends TypeSerializer<Integer, String> {
 
         return builder.buildFuture();
     }
+
+    public static class NumberBaseSerializer extends Serializer<NumberBaseArgumentType, ArgumentSerializer.ArgumentTypeProperties<NumberBaseArgumentType>>{
+
+        @Override
+        public ArgumentTypeProperties<NumberBaseArgumentType> getArgumentTypeProperties(NumberBaseArgumentType argumentType) {
+            return new Properties();
+        }
+
+        public final class Properties
+                implements ArgumentSerializer.ArgumentTypeProperties<NumberBaseArgumentType>{
+
+            @Override
+            public NumberBaseArgumentType createType(CommandRegistryAccess commandRegistryAccess) {
+                return new NumberBaseArgumentType();
+            }
+
+            @Override
+            public ArgumentSerializer<NumberBaseArgumentType, ?> getSerializer() {
+                return NumberBaseSerializer.this;
+            }
+        }
+
+    }
+
+
 }

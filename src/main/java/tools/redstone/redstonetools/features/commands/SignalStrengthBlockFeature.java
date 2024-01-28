@@ -32,7 +32,7 @@ public class SignalStrengthBlockFeature extends CommandFeature {
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
         try {
             ItemStack itemStack = block.getValue().getItemStack(signalStrength.getValue());
-            source.getPlayer().giveItemStack(itemStack);
+            source.getPlayerOrThrow().giveItemStack(itemStack);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return Feedback.error(e.getMessage());
         }

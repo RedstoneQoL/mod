@@ -24,7 +24,7 @@ public class ItemBindFeature extends CommandFeature{
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
 
-        player = source.getPlayer();
+        player = source.getPlayerOrThrow();
         waitingForCommand = true;
 
         return Feedback.success("Please run any command and hold the item you want the command be bound to");

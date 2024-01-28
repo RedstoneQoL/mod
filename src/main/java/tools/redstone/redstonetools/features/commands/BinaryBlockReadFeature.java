@@ -16,10 +16,11 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.Collections;
 
-import static tools.redstone.redstonetools.features.arguments.serializers.BlockStateArgumentSerializer.blockState;
+import static tools.redstone.redstonetools.features.arguments.serializers.BlockStateArgumentType.blockState;
 import static tools.redstone.redstonetools.features.arguments.serializers.BoolSerializer.bool;
 import static tools.redstone.redstonetools.features.arguments.serializers.IntegerSerializer.integer;
-import static tools.redstone.redstonetools.features.arguments.serializers.NumberBaseSerializer.numberBase;
+import static tools.redstone.redstonetools.features.arguments.serializers.NumberBaseArgumentType.numberBase;
+
 
 @AutoService(AbstractFeature.class)
 @Feature(name = "Binary Block Read", description = "Interprets your WorldEdit selection as a binary number.", command = "/read", worldedit = true)
@@ -27,14 +28,13 @@ public class BinaryBlockReadFeature extends CommandFeature {
     private static final BlockStateArgument LIT_LAMP_ARG = new BlockStateArgument(
             Blocks.REDSTONE_LAMP.getDefaultState().with(RedstoneLampBlock.LIT, true),
             Collections.singleton(RedstoneLampBlock.LIT),
-            null
-    );
+            null);
 
     public static final Argument<Integer> offset = Argument
             .ofType(integer(1))
             .withDefault(2);
     public static final Argument<BlockStateArgument> onBlock = Argument
-            .ofType(blockState())
+            .ofType(blockState(REGISTRY_ACCESS))
             .withDefault(LIT_LAMP_ARG);
     public static final Argument<Integer> toBase = Argument
             .ofType(numberBase())
@@ -45,7 +45,7 @@ public class BinaryBlockReadFeature extends CommandFeature {
 
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
-        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayer());
+        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayerOrThrow());
 
         if (selectionOrFeedback.right().isPresent()) {
             return selectionOrFeedback.right().get();

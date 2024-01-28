@@ -1,5 +1,7 @@
 package tools.redstone.redstonetools.utils;
 
+import org.joml.Vector3f;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.world.RaycastContext;
@@ -9,9 +11,9 @@ public class RaycastUtils {
     }
 
     public static BlockHitResult getBlockHitNeighbor(BlockHitResult hit) {
-        var sideOffset = hit.getSide().getUnitVector();
+        Vector3f sideOffset = hit.getSide().getUnitVector();
 
-        var newBlockPos = hit.getBlockPos().add(sideOffset.getX(), sideOffset.getY(), sideOffset.getZ());
+        var newBlockPos = hit.getBlockPos().add((int) sideOffset.x(), (int) sideOffset.y(), (int) sideOffset.z());
 
         return hit.withBlockPos(newBlockPos);
     }
@@ -22,7 +24,6 @@ public class RaycastUtils {
                 player.getEyePos().add(player.getRotationVector().multiply(reach)),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
-                player
-        ));
+                player));
     }
 }

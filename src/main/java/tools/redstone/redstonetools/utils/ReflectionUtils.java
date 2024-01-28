@@ -9,10 +9,11 @@ import sun.misc.Unsafe;
 import tools.redstone.redstonetools.features.AbstractFeature;
 import tools.redstone.redstonetools.features.Feature;
 import tools.redstone.redstonetools.features.arguments.Argument;
+import tools.redstone.redstonetools.features.arguments.serializers.GenericArgumentType;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
-import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.*;
@@ -22,6 +23,7 @@ public class ReflectionUtils {
     private static final Logger LOGGER = LogManager.getLogger();
     private static DoctorModule[] modules;
     private static Set<? extends AbstractFeature> features;
+    private static Set<Class<? extends GenericArgumentType>> arguments;
 
     private ReflectionUtils() {
         throw new IllegalStateException("Utility class");
@@ -44,11 +46,9 @@ public class ReflectionUtils {
             // get lookup
             Field field = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
             MethodHandles.publicLookup();
-            INTERNAL_LOOKUP = (MethodHandles.Lookup)
-                    unsafe.getObject(
-                            unsafe.staticFieldBase(field),
-                            unsafe.staticFieldOffset(field)
-                    );
+            INTERNAL_LOOKUP = (MethodHandles.Lookup) unsafe.getObject(
+                    unsafe.staticFieldBase(field),
+                    unsafe.staticFieldOffset(field));
         } catch (Exception e) {
             e.printStackTrace();
             throw new ExceptionInInitializerError(e);
@@ -71,6 +71,21 @@ public class ReflectionUtils {
         return modules;
     }
 
+    public static Set<Class<? extends GenericArgumentType>> getAllArguments() {
+        if (arguments == null) {
+            try {
+                arguments = findClasses(GenericArgumentType.class)
+                        .stream()
+                        .filter(argument -> !Modifier.isAbstract(argument.getModifiers()))
+                        .collect(Collectors.toSet());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return arguments;
+    }
+
     public static Set<? extends AbstractFeature> getFeatures() {
         if (features == null) {
             try {
@@ -82,7 +97,7 @@ public class ReflectionUtils {
         return features;
     }
 
-    private static <T> Set<? extends T> serviceLoad(Class<T> clazz) throws IOException {
+    public static <T> Set<Class<? extends T>> findClasses(Class<T> clazz) throws IOException {
         ClassLoader cl = ReflectionUtils.class.getClassLoader();
         Enumeration<URL> serviceFiles = cl.getResources("META-INF/services/" + clazz.getName());
         Set<String> classNames = new HashSet<>();
@@ -92,11 +107,19 @@ public class ReflectionUtils {
                 classNames.addAll(IOUtils.readLines(reader, "UTF-8"));
             }
         }
+        //noinspection unchecked
         return classNames.stream()
                 .filter(it -> !it.isEmpty() && !it.isBlank())
                 .map(ReflectionUtils::loadClass)
                 .filter(Objects::nonNull)
                 .filter(clazz::isAssignableFrom)
+				.map(it -> (Class<? extends T>) it)
+                .collect(Collectors.toSet());
+    }
+
+    private static <T> Set<? extends T> serviceLoad(Class<T> clazz) throws IOException {
+        return findClasses(clazz)
+                .stream()
                 .map(it -> {
                     try {
                         return it.getDeclaredConstructor().newInstance();
@@ -127,7 +150,8 @@ public class ReflectionUtils {
                     if (!Modifier.isPublic(field.getModifiers())
                             || !Modifier.isStatic(field.getModifiers())
                             || !Modifier.isFinal(field.getModifiers())) {
-                        throw new RuntimeException("Field " + field.getName() + " of feature " + featureClass.getName() + " is not public static final");
+                        throw new RuntimeException("Field " + field.getName() + " of feature " + featureClass.getName()
+                                + " is not public static final");
                     }
 
                     try {

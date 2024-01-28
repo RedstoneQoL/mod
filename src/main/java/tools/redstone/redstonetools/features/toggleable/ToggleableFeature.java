@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.command.CommandRegistryAccess;
+import net.minecraft.server.command.CommandManager.RegistrationEnvironment;
 import tools.redstone.redstonetools.features.AbstractFeature;
 import tools.redstone.redstonetools.features.Feature;
 import tools.redstone.redstonetools.features.feedback.Feedback;
@@ -13,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
@@ -48,14 +51,14 @@ public abstract class ToggleableFeature extends AbstractFeature {
     @Override
     public void register() {
         super.register();
-        
+
         // load user settings
         // and register save hook
         loadConfig();
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
             saveConfig();
         });
-      
+
         var containsRequiredArguments = ReflectionUtils.getArguments(getClass()).stream()
                 .anyMatch(a -> !a.isOptional());
         if (containsRequiredArguments) {
@@ -67,15 +70,14 @@ public abstract class ToggleableFeature extends AbstractFeature {
                 info.name(),
                 InputUtil.Type.KEYSYM,
                 -1,
-                "Redstone Tools"
-        ));
+                "Redstone Tools"));
 
         keyBindings.add(keyBinding);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (keyBinding.wasPressed()) {
                 assert client.player != null;
-                client.player.sendChatMessage("/" + info.command());
+                client.player.networkHandler.sendChatCommand(info.command());
             }
         });
     }
@@ -96,7 +98,8 @@ public abstract class ToggleableFeature extends AbstractFeature {
     @SuppressWarnings({ "rawtypes", "unchecked" })
 
     @Override
-    protected void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, boolean dedicated) {
+    protected void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher,
+            CommandRegistryAccess registryAccess, RegistrationEnvironment environment) {
         var baseCommand = literal(getCommand())
                 .executes(this::toggle);
 
@@ -106,7 +109,8 @@ public abstract class ToggleableFeature extends AbstractFeature {
             baseCommand.then(literal(name)
                     .executes(context -> {
                         Object value = argument.getValue();
-                        return Feedback.success("Option {} of feature {} is set to: {}", name, getName(), argument.getType().serialize(value)).send(context);
+                        return Feedback.success("Option {} of feature {} is set to: {}", name, getName(),
+                                argument.getType().serialize(value)).send(context);
                     })
                     .then(argument("value", argument.getType()).executes(context -> {
                         Object value = context.getArgument("value", argument.getType().getTypeClass());
@@ -120,8 +124,7 @@ public abstract class ToggleableFeature extends AbstractFeature {
                         IO_EXECUTOR.execute(this::saveConfig);
 
                         return Feedback.success("Set {} to {} for feature {}", name, value, getName()).send(context);
-                    }))
-            );
+                    })));
         }
 
         dispatcher.register(baseCommand);
@@ -180,13 +183,16 @@ public abstract class ToggleableFeature extends AbstractFeature {
         return disable(context.getSource());
     }
 
-    protected void onEnable() { }
-    protected void onDisable() { }
+    protected void onEnable() {
+    }
+
+    protected void onDisable() {
+    }
 
     // todo: right now the configuration methods are assuming every
-    //  type is serialized to a string, this should be fixed in the future
-    //  but for now it works because every type right now serializes to a string
-    //  + it will probably be refactored soon
+    // type is serialized to a string, this should be fixed in the future
+    // but for now it works because every type right now serializes to a string
+    // + it will probably be refactored soon
 
     /** Reloads the configuration from the disk. */
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -214,9 +220,11 @@ public abstract class ToggleableFeature extends AbstractFeature {
 
             setEnabled(enabled);
 
-            RedstoneToolsClient.LOGGER.info("Loaded configuration for feature " + getID() + " file(" + configFile + ")");
+            RedstoneToolsClient.LOGGER
+                    .info("Loaded configuration for feature " + getID() + " file(" + configFile + ")");
         } catch (Exception e) {
-            RedstoneToolsClient.LOGGER.error("Failed to load configuration for feature " + getID() + " file(" + configFile + ")");
+            RedstoneToolsClient.LOGGER
+                    .error("Failed to load configuration for feature " + getID() + " file(" + configFile + ")");
             e.printStackTrace();
         }
     }
@@ -249,7 +257,8 @@ public abstract class ToggleableFeature extends AbstractFeature {
 
             RedstoneToolsClient.LOGGER.info("Saved configuration for feature " + getID() + " file(" + configFile + ")");
         } catch (Exception e) {
-            RedstoneToolsClient.LOGGER.error("Failed to save configuration for feature " + getID() + " file(" + configFile + ")");
+            RedstoneToolsClient.LOGGER
+                    .error("Failed to save configuration for feature " + getID() + " file(" + configFile + ")");
             e.printStackTrace();
         }
     }

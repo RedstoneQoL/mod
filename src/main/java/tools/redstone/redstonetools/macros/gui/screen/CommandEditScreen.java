@@ -1,55 +1,55 @@
 package tools.redstone.redstonetools.macros.gui.screen;
 
-import tools.redstone.redstonetools.macros.gui.MaroCommandSuggestor;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import tools.redstone.redstonetools.macros.gui.MacroCommandSuggestor;
 
 
 public class CommandEditScreen extends GameOptionsScreen {
 
     private final TextFieldWidget commandField;
-    private final MaroCommandSuggestor commandMaroCommandSuggestor;
+    private final MacroCommandSuggestor commandMacroCommandSuggestor;
     private boolean changed = false;
 
     public CommandEditScreen(Screen parent, GameOptions gameOptions, TextFieldWidget commandField) {
         super(parent, gameOptions, Text.of(""));
         this.commandField = commandField;
         client = MinecraftClient.getInstance();
-        this.commandMaroCommandSuggestor = new MaroCommandSuggestor(client, parent, commandField,client.textRenderer,true,false, commandField.y -20,5,-805306368);
+        this.commandMacroCommandSuggestor = new MacroCommandSuggestor(client, parent, commandField,client.textRenderer,true,false, commandField.getY() -20,5,-805306368);
 
         commandField.setChangedListener((s) -> changed = true);
-        commandMaroCommandSuggestor.setWindowActive(true);
-        commandMaroCommandSuggestor.refresh();
+        commandMacroCommandSuggestor.setWindowActive(true);
+        commandMacroCommandSuggestor.refresh();
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        parent.render(matrices, mouseX, mouseY, delta);
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    }
 
-        this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        parent.render(context, mouseX, mouseY, delta);
+        context.getMatrices().translate(0,0,0.03F);
 
-        commandField.render(matrices, mouseX, mouseY, delta);
+        context.fillGradient( 0, 0, this.width, this.height, -1072689136, -804253680);
 
-        commandMaroCommandSuggestor.render(matrices, mouseX, mouseY);
+        commandField.render(context, mouseX, mouseY, delta);
+
+        commandMacroCommandSuggestor.render(context, mouseX, mouseY);
+        commandMacroCommandSuggestor.tryRenderWindow(context,mouseX,mouseY);
+
         if (changed) {
-            commandMaroCommandSuggestor.refresh();
+            commandMacroCommandSuggestor.refresh();
             changed = false;
         }
 
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        commandField.tick();
     }
 
     @Override
@@ -60,29 +60,28 @@ public class CommandEditScreen extends GameOptionsScreen {
     @Override
     public void close() {
         super.close();
-        commandField.setTextFieldFocused(false);
+        commandField.setFocused(false);
         commandField.setChangedListener(null);
-        commandMaroCommandSuggestor.setWindowActive(false);
-        commandMaroCommandSuggestor.refresh();
-        commandMaroCommandSuggestor.close();
+        commandMacroCommandSuggestor.setWindowActive(false);
+        commandMacroCommandSuggestor.refresh();
+        commandMacroCommandSuggestor.close();
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!commandField.mouseClicked(mouseX, mouseY, button)) {
-            if (!commandMaroCommandSuggestor.mouseClicked(mouseX, mouseY, button)) {
+            if (!commandMacroCommandSuggestor.mouseClicked(mouseX, mouseY, button)) {
                 close();
             } else {
-                commandField.setTextFieldFocused(true);
+                commandField.setFocused(true);
             }
             return false;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        return commandMaroCommandSuggestor.mouseScrolled(amount);
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        return commandMacroCommandSuggestor.mouseScrolled(verticalAmount);
     }
 
     @Override
@@ -96,7 +95,7 @@ public class CommandEditScreen extends GameOptionsScreen {
             close();
             return true;
         }
-        commandMaroCommandSuggestor.keyPressed(keyCode, scanCode, modifiers);
+        commandMacroCommandSuggestor.keyPressed(keyCode, scanCode, modifiers);
 
         return commandField.keyPressed(keyCode, scanCode, modifiers);
     }

@@ -12,7 +12,7 @@ import java.util.EnumSet;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class EnumSerializer<T extends Enum<T>>
-        extends TypeSerializer<T, String> {
+        extends GenericArgumentType<T, String> {
 
     protected EnumSerializer(Class<T> clazz) {
         super(clazz);

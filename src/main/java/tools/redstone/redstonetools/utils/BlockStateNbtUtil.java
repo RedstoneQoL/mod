@@ -7,11 +7,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-
 import java.util.Objects;
 
 /**
@@ -35,7 +34,7 @@ public final class BlockStateNbtUtil {
         }
 
         NbtCompound root = new NbtCompound();
-        root.putString("Id", Registry.BLOCK.getId(state.getBlock()).toString());
+        root.putString("Id", Registries.BLOCK.getId(state.getBlock()).toString());
 
         // serialize properties
         if (!state.getProperties().isEmpty()) {
@@ -70,7 +69,7 @@ public final class BlockStateNbtUtil {
         // we use new Identifier(...) here to allow it to throw exceptions
         // instead of getting a cryptic NPE
         Identifier identifier = new Identifier(compound.getString("Id"));
-        Block block = Registry.BLOCK.get(identifier);
+        Block block = Registries.BLOCK.get(identifier);
 
         // deserialize properties
         BlockState state = block.getDefaultState();
@@ -97,7 +96,7 @@ public final class BlockStateNbtUtil {
      * or returns the given default if the tag is null/empty.
      *
      * @param compound The NBT tag.
-     * @param def The default.
+     * @param def      The default.
      * @return The block state or {@code def} if the tag is null/empty.
      */
     public static BlockState fromNBT(NbtCompound compound, BlockState def) {
@@ -172,9 +171,7 @@ public final class BlockStateNbtUtil {
             return null;
         }
 
-        BlockState def = stack.getItem() instanceof BlockItem blockItem ?
-                blockItem.getBlock().getDefaultState() :
-                null;
+        BlockState def = stack.getItem() instanceof BlockItem blockItem ? blockItem.getBlock().getDefaultState() : null;
         return fromNBT(nbt.getCompound(EXACT_STATE_KEY), def);
     }
 

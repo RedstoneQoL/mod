@@ -23,11 +23,11 @@ public class WorldEditUtils {
      *
      * TODO: maybe make an async version of this somehow
      *
-     * @param region The region.
+     * @param region   The region.
      * @param consumer The function to run.
      */
     public static void forEachBlockInRegion(Region region,
-                                            Consumer<BlockVector3> consumer) {
+            Consumer<BlockVector3> consumer) {
         if (!DependencyLookup.WORLDEDIT_PRESENT) {
             throw new IllegalStateException("WorldEdit is not loaded.");
         }

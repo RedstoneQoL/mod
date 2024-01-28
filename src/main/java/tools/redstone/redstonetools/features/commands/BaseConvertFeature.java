@@ -9,7 +9,7 @@ import tools.redstone.redstonetools.features.feedback.Feedback;
 import tools.redstone.redstonetools.utils.NumberArg;
 
 
-import static tools.redstone.redstonetools.features.arguments.serializers.NumberBaseSerializer.numberBase;
+import static tools.redstone.redstonetools.features.arguments.serializers.NumberBaseArgumentType.numberBase;
 import static tools.redstone.redstonetools.features.arguments.serializers.NumberSerializer.numberArg;
 
 @AutoService(AbstractFeature.class)

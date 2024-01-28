@@ -1,18 +1,15 @@
 package tools.redstone.redstonetools.macros.gui.screen;
 
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.util.math.MathHelper;
 import tools.redstone.redstonetools.macros.Macro;
 import tools.redstone.redstonetools.macros.MacroManager;
 import tools.redstone.redstonetools.macros.actions.Action;
 import tools.redstone.redstonetools.macros.actions.CommandAction;
-import tools.redstone.redstonetools.macros.gui.widget.commandlist.CommandEntry;
 import tools.redstone.redstonetools.macros.gui.widget.commandlist.CommandListWidget;
 import tools.redstone.redstonetools.macros.gui.widget.macrolist.MacroListWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -20,8 +17,7 @@ import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.InputUtil.Key;
 import net.minecraft.client.util.InputUtil.Type;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import tools.redstone.redstonetools.utils.KeyBindingUtils;
@@ -63,7 +59,7 @@ public class MacroEditScreen extends GameOptionsScreen {
         nameField = new TextFieldWidget(this.textRenderer, this.width / 2 - 100, 22, 200, 20, Text.of(""));
         nameField.setText(macro.name.trim());
 
-        doneButton = this.addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height / 4 + 144 + 5, 98, 20, Text.of("Done"), (button) -> {
+        doneButton = this.addDrawableChild(ButtonWidget.builder(Text.of("Done"), (button) -> {
             String name = nameField.getText().trim();
             if (name.isEmpty()) return;
 
@@ -75,7 +71,7 @@ public class MacroEditScreen extends GameOptionsScreen {
             INJECTOR.getInstance(MacroManager.class).saveChanges();
 
             client.setScreen(parent);
-        }));
+        }).dimensions(this.width / 2 - 100, this.height / 4 + 144 + 5, 98, 20).build());
         doneButton.active = canClickDone();
 
         nameField.setChangedListener(s -> {
@@ -85,38 +81,38 @@ public class MacroEditScreen extends GameOptionsScreen {
         addSelectableChild(nameField);
 
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 2, this.height / 4 + 144 + 5, 98, 20, ScreenTexts.CANCEL, (button) -> {
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
             close();
-        }));
+        }).dimensions(this.width / 2 + 2, this.height / 4 + 144 + 5, 98, 20).build());
 
         Key keyCode = macro.getKey();
         Text text = keyCode.getLocalizedText();
         if (keyCode == InputUtil.UNKNOWN_KEY) text = Text.of("");
-        if ( KeyBindingUtils.isKeyAlreadyBound(keyCode) ) { text = new LiteralText(text.getString()).formatted(Formatting.RED); }
+        if ( KeyBindingUtils.isKeyAlreadyBound(keyCode) ) { text = Text.literal(text.getString()).formatted(Formatting.RED); }
 
-        keyBindButton = new ButtonWidget(this.width / 2 + 26, 55, 75, 20, text, (button) -> {
+        keyBindButton = ButtonWidget.builder(text, (button) -> {
             detectingKeycodeKey = true;
-            keyBindButton.setMessage((new LiteralText("> ")).append(keyBindButton.getMessage().shallowCopy().formatted(Formatting.YELLOW)).append(" <").formatted(Formatting.YELLOW));
-        });
+            keyBindButton.setMessage((Text.literal("> ")).append(keyBindButton.getMessage().copy().formatted(Formatting.YELLOW)).append(" <").formatted(Formatting.YELLOW));
+        }).dimensions(this.width / 2 + 26, 55, 75, 20).build();
         if (detectingKeycodeKey) keyBindButton.onPress();
 
         this.addDrawableChild(keyBindButton);
 
         int widgetWidth = 339;
-        List<CommandEntry> entries = null;
+        List<CommandListWidget.CommandEntry> entries = null;
         double scrollAmount = 0;
         if (commandList != null) {
             entries = commandList.children();
             scrollAmount = commandList.getScrollAmount();
         }
 
-        commandList = new CommandListWidget(client, this, widgetWidth, height, 85, this.height / 4 + 144 + 5 - 10, 24);
-        commandList.setLeftPos(width / 2 - widgetWidth / 2);
+        commandList = new CommandListWidget(client, this, widgetWidth, this.height / 4 + 144 + 5 - 10-85, 85, 24);
+        commandList.setX(width / 2 - widgetWidth / 2);
 
 
         if (entries != null) {
             commandList.children().clear();
-            for (CommandEntry entry : entries) {
+            for (CommandListWidget.CommandEntry entry : entries) {
                 entry.setOwner(commandList);
                 commandList.children().add(entry);
             }
@@ -132,39 +128,35 @@ public class MacroEditScreen extends GameOptionsScreen {
         this.addSelectableChild(commandList);
     }
 
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+    }
+
     private boolean canClickDone() {
         return !nameField.getText().trim().isEmpty() && macroListWidget.canAdd(macro);
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         if (overlapped) {
             mouseX = -1;
             mouseY = -1;
         }
 
-        this.renderBackgroundTexture(0);
-        commandList.render(matrices, mouseX, mouseY, delta);
-        super.render(matrices, mouseX, mouseY, delta);
+        this.renderBackgroundTexture(context);
+        commandList.render(context, mouseX, mouseY, delta);
+        super.render(context, mouseX, mouseY, delta);
 
-        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 16777215);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 16777215);
 
-        drawCenteredText(matrices, this.textRenderer, "Key Bind", width / 2 - (99 - textRenderer.getWidth("Key Bind") / 2), 55 + textRenderer.fontHeight / 2, 16777215);
-        nameField.render(matrices, mouseX, mouseY, delta);
+        context.drawCenteredTextWithShadow(this.textRenderer, "Key Bind", width / 2 - (99 - textRenderer.getWidth("Key Bind") / 2), 55 + textRenderer.fontHeight / 2, 16777215);
+        nameField.render(context, mouseX, mouseY, delta);
 
         if (nameField.getText().isEmpty() && !nameField.isFocused()) {
             nameField.setSuggestion("Name");
         } else {
             nameField.setSuggestion("");
         }
-    }
-
-    @Override
-    public void tick() {
-        nameField.tick();
-        commandList.tick();
-
-        super.tick();
     }
 
     @Override
@@ -245,7 +237,7 @@ public class MacroEditScreen extends GameOptionsScreen {
             detectingKeycodeKey = false;
             Text text = key.getLocalizedText();
             if (key == InputUtil.UNKNOWN_KEY) text = Text.of("");
-            if ( KeyBindingUtils.isKeyAlreadyBound(key) ) { text = new LiteralText(text.getString()).formatted(Formatting.RED); }
+            if ( KeyBindingUtils.isKeyAlreadyBound(key) ) { text = Text.literal(text.getString()).formatted(Formatting.RED); }
 
             keyBindButton.setMessage(text);
             macro.setKey(key);

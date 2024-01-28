@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(MinecraftClient.class)
 public interface MinecraftClientAccessor {
 
-    @Invoker
-    ItemStack invokeAddBlockEntityNbt(ItemStack stack, BlockEntity blockEntity);
+    @Invoker("addBlockEntityNbt")
+    void invokeAddBlockEntityNbt(ItemStack stack, BlockEntity blockEntity);
 
 }

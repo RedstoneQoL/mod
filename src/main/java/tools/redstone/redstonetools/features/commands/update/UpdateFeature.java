@@ -2,6 +2,8 @@ package tools.redstone.redstonetools.features.commands.update;
 
 import com.google.auto.service.AutoService;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.datafixers.util.Either;
+import com.sk89q.worldedit.regions.Region;
 import net.minecraft.server.command.ServerCommandSource;
 import tools.redstone.redstonetools.features.AbstractFeature;
 import tools.redstone.redstonetools.features.Feature;
@@ -14,7 +16,7 @@ import tools.redstone.redstonetools.utils.WorldEditUtils;
 public class UpdateFeature extends CommandFeature {
     @Override
     protected Feedback execute(ServerCommandSource source) throws CommandSyntaxException {
-        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayer());
+        var selectionOrFeedback = WorldEditUtils.getSelection(source.getPlayerOrThrow());
         if (selectionOrFeedback.right().isPresent()) {
             return selectionOrFeedback.right().get();
         }

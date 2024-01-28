@@ -35,7 +35,8 @@ public abstract class AutoDustMixin {
     }
 
     @Inject(method = "onPlaced", at = @At("TAIL"))
-    private void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack, CallbackInfo ci) {
+    private void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack,
+            CallbackInfo ci) {
         if (!getAutoDustFeature().isEnabled()) {
             return;
         }
@@ -48,7 +49,9 @@ public abstract class AutoDustMixin {
             return;
         }
 
-        ItemPlacementContext context = new ItemPlacementContext((PlayerEntity) placer, Hand.MAIN_HAND,new ItemStack(Items.REDSTONE),new BlockHitResult(new Vec3d(dustPos.getX(),dustPos.getY(),dustPos.getZ()), Direction.UP, dustPos,false));
+        ItemPlacementContext context = new ItemPlacementContext((PlayerEntity) placer, Hand.MAIN_HAND,
+                new ItemStack(Items.REDSTONE), new BlockHitResult(
+                        new Vec3d(dustPos.getX(), dustPos.getY(), dustPos.getZ()), Direction.UP, dustPos, false));
         placer.getWorld().setBlockState(dustPos, Blocks.REDSTONE_WIRE.getPlacementState(context));
     }
 }
