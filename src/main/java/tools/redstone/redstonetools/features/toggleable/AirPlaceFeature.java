@@ -47,15 +47,6 @@ public class AirPlaceFeature extends ToggleableFeature {
         return true;
     }
 
-    public static HitResult findAirPlacePosition(MinecraftClient client) {
-        if (client.player == null)
-            return null;
-        ClientPlayerEntity player = client.player;
-
-        float reach = AirPlaceFeature.reach.getValue();
-        return player.raycast(reach, 0, false);
-    }
-
     public static BlockHitResult findAirPlaceBlockHit(PlayerEntity playerEntity) {
         var hit = RaycastUtils.rayCastFromEye(playerEntity, reach.getValue());
         return new BlockHitResult(hit.getPos(), hit.getSide(), hit.getBlockPos(), false);
@@ -88,11 +79,10 @@ public class AirPlaceFeature extends ToggleableFeature {
             if (!canAirPlace(client.player))
                 return true;
 
-            HitResult hitResult = findAirPlacePosition(client);
+            BlockHitResult hitResult = findAirPlaceBlockHit(client.player);
             if (hitResult == null)
                 return true;
-            Vec3d pos = hitResult.getPos();
-            BlockPos blockPos = new BlockPos((int) pos.x, (int) pos.y, (int) pos.z);
+            BlockPos blockPos = hitResult.getBlockPos();
 
             BlockState blockState = ItemUtils.getUseState(client.player,
                     ItemUtils.getMainItem(client.player),
