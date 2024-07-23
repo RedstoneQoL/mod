@@ -1,6 +1,8 @@
 package tools.redstone.redstonetools.utils;
 
 import net.minecraft.block.Block;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -12,6 +14,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 
@@ -123,14 +126,15 @@ public interface SignalBlockSupplier {
 
     private static void setCompoundNbt(ItemStack item, NbtCompound nbt) {
         nbt.putBoolean("HideFlags", true);
-        item.setNbt(nbt);
-        item.addEnchantment(Enchantment.byRawId(0), 0);
+        item.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
+//        item.addEnchantment(Enchantment.byRawId(0), 0);
+//        Registry.ENC
+//        new Enchantment()
     }
 
     private static void setItemName(ItemStack item, int signalStrength) {
         MutableText text = Text.literal(String.valueOf(signalStrength));
         text.setStyle(text.getStyle().withColor(Formatting.RED));
-        item.setCustomName(text);
+        item.set(DataComponentTypes.CUSTOM_NAME, text);
     }
-
 }

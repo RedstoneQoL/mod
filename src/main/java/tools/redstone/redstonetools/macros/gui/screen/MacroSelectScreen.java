@@ -2,55 +2,54 @@ package tools.redstone.redstonetools.macros.gui.screen;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.option.ControlsListWidget;
 import net.minecraft.client.gui.screen.option.GameOptionsScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
 import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
+import tools.redstone.redstonetools.macros.Macro;
 import tools.redstone.redstonetools.macros.gui.widget.macrolist.MacroEntry;
 import tools.redstone.redstonetools.macros.gui.widget.macrolist.MacroListWidget;
 
 public class MacroSelectScreen extends GameOptionsScreen {
-
-
+    private static final Text TITLE_TEXT = Text.of("Macros");
     private MacroListWidget macroList;
+    private ButtonWidget createNewButton;
 
-    public MacroSelectScreen(Screen parent, GameOptions gameOptions, Text title) {
-        super(parent, gameOptions, title);
+    public MacroSelectScreen(Screen parent, GameOptions gameOptions) {
+        super(parent, gameOptions, TITLE_TEXT);
     }
 
     @Override
-    public void init() {
-        super.init();
-
-        this.macroList = new MacroListWidget(this,client);
-        this.addSelectableChild(this.macroList);
-
-        ButtonWidget buttonWidget = ButtonWidget.builder(Text.of("Create New..."), (button) -> {
-            this.client.setScreen(new MacroEditScreen(this,gameOptions,Text.of("New Macro"), macroList));
-        }).dimensions(this.width / 2 +1, this.height - 29, 150, 20).build();
-        this.addDrawableChild(buttonWidget);
-
-        buttonWidget = ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
-            this.client.setScreen(this.parent);
-        }).dimensions(this.width / 2 - 151, this.height - 29, 150, 20).build();
-
-        this.addDrawableChild(buttonWidget);
+    protected void initBody() {
+        this.macroList = this.layout.addBody(new MacroListWidget(this, this.client));
     }
 
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackgroundTexture(context);
-        macroList.render(context, mouseX, mouseY, delta);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 8, 16777215);
-        super.render(context, mouseX, mouseY, delta);
+    @Override
+    protected void addOptions() {
+    }
+
+    @Override
+    protected void initFooter() {
+        this.createNewButton = ButtonWidget.builder(Text.of("Create New..."), button -> {
+            this.client.setScreen(new MacroEditScreen(this,gameOptions, Text.of("New Macro"), macroList));
+        }).build();
+        DirectionalLayoutWidget directionalLayoutWidget = this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8));
+        directionalLayoutWidget.add(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close()).build());
+        directionalLayoutWidget.add(this.createNewButton);
+    }
+
+    @Override
+    protected void initTabNavigation() {
+        this.layout.refreshPositions();
+        this.macroList.position(this.width, this.layout);
     }
 
     public void openEditScreen(MacroEntry entry) {
         client.setScreen(new MacroEditScreen(this,gameOptions,Text.of("Edit Macro"), macroList, entry.macro));
-    }
-
-    @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
     }
 }

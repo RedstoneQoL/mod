@@ -2,6 +2,10 @@ package tools.redstone.redstonetools.utils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.BlockStateComponent;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -11,6 +15,8 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.Identifier;
+
+import javax.xml.crypto.Data;
 import java.util.Objects;
 
 /**
@@ -68,7 +74,7 @@ public final class BlockStateNbtUtil {
         // find the block
         // we use new Identifier(...) here to allow it to throw exceptions
         // instead of getting a cryptic NPE
-        Identifier identifier = new Identifier(compound.getString("Id"));
+        Identifier identifier = Identifier.of(compound.getString("Id"));
         Block block = Registries.BLOCK.get(identifier);
 
         // deserialize properties
@@ -118,8 +124,11 @@ public final class BlockStateNbtUtil {
      * @param state The block state to assign.
      */
     public static void putPlacement(ItemStack stack, BlockState state) {
-        Objects.requireNonNull(stack);
-        stack.getOrCreateNbt().put(EXACT_STATE_KEY, toNBT(state));
+        stack.apply(DataComponentTypes.BLOCK_STATE, BlockStateComponent.DEFAULT, comp -> {
+                comp.applyToState(state);
+                return comp;
+        });
+//        stack.getOrCreateNbt().put(EXACT_STATE_KEY, toNBT(state));
     }
 
     /**
@@ -146,33 +155,36 @@ public final class BlockStateNbtUtil {
      * @return The block state or null.
      */
     public static BlockState getPlacementStateOrNull(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null || !nbt.contains(EXACT_STATE_KEY)) {
+        BlockStateComponent blockState = stack.getOrDefault(DataComponentTypes.BLOCK_STATE,
+                BlockStateComponent.DEFAULT);
+
+        if (blockState.equals(BlockStateComponent.DEFAULT)) {
             return null;
         }
 
-        return fromNBT(nbt.getCompound(EXACT_STATE_KEY));
+        // might work, might not. really bad workaround either way
+        return blockState.applyToState(Blocks.AIR.getDefaultState());
     }
 
-    /**
-     * Tries to get the exact placement state for the given
-     * item stack. If it is unable to determine the exact
-     * block state it will return the blocks default state
-     * if the item is a {@link BlockItem}, or null otherwise.
-     *
-     * @param stack The item stack.
-     * @return The block state or null.
-     */
-    public static BlockState getPlacementState(ItemStack stack) {
-        NbtCompound nbt = stack.getNbt();
-        if (nbt == null || !nbt.contains(EXACT_STATE_KEY)) {
-            if (stack.getItem() instanceof BlockItem blockItem)
-                return blockItem.getBlock().getDefaultState();
-            return null;
-        }
-
-        BlockState def = stack.getItem() instanceof BlockItem blockItem ? blockItem.getBlock().getDefaultState() : null;
-        return fromNBT(nbt.getCompound(EXACT_STATE_KEY), def);
-    }
+//    /**
+//     * Tries to get the exact placement state for the given
+//     * item stack. If it is unable to determine the exact
+//     * block state it will return the blocks default state
+//     * if the item is a {@link BlockItem}, or null otherwise.
+//     *
+//     * @param stack The item stack.
+//     * @return The block state or null.
+//     */
+//    public static BlockState getPlacementState(ItemStack stack) {
+//        NbtCompound nbt = stack.getNbt();
+//        if (nbt == null || !nbt.contains(EXACT_STATE_KEY)) {
+//            if (stack.getItem() instanceof BlockItem blockItem)
+//                return blockItem.getBlock().getDefaultState();
+//            return null;
+//        }
+//
+//        BlockState def = stack.getItem() instanceof BlockItem blockItem ? blockItem.getBlock().getDefaultState() : null;
+//        return fromNBT(nbt.getCompound(EXACT_STATE_KEY), def);
+//    }
 
 }

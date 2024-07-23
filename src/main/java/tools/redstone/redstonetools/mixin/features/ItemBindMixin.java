@@ -2,6 +2,10 @@ package tools.redstone.redstonetools.mixin.features;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.component.ComponentHolder;
+import net.minecraft.component.ComponentType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
@@ -28,10 +32,7 @@ import static tools.redstone.redstonetools.RedstoneToolsClient.INJECTOR;
 public abstract class ItemBindMixin {
 
     @Mixin(ItemStack.class)
-    private abstract static class ItemStackMixin {
-
-        @Shadow
-        public abstract @Nullable NbtCompound getNbt();
+    private abstract static class ItemStackMixin implements ComponentHolder {
 
         @Inject(method = "use", at = @At("HEAD"), cancellable = true)
         public void checkCommandNBT(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
@@ -49,9 +50,16 @@ public abstract class ItemBindMixin {
 
         private boolean tryToExecuteNBTCommand(Hand hand, World world) {
             if (hand == Hand.OFF_HAND || world.isClient) return false;
-            NbtCompound nbt = getNbt();
-            if (nbt == null || !nbt.contains("command")) return false;
+            @Nullable var data = this.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
+            if (data == null)
+                return false;
+
+            NbtCompound nbt = data.copyNbt();
             NbtString command = (NbtString) nbt.get("command");
+
+            if (command == null)
+                return false;
+
             MinecraftClient.getInstance().getNetworkHandler().sendChatCommand(command.asString());
 
             return true;

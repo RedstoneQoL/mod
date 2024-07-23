@@ -3,8 +3,12 @@ package tools.redstone.redstonetools.utils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.LoreComponent;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.text.Text;
 import net.minecraft.world.BlockStateRaycastContext;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.nbt.NbtCompound;
@@ -17,19 +21,12 @@ public class ItemUtils {
     }
 
     public static void addExtraNBTText(ItemStack itemStack, String text) {
-        NbtCompound displayNbt = itemStack.getSubNbt("display");
-        NbtList loreList = new NbtList();
-
-        if (displayNbt == null) {
-            displayNbt = new NbtCompound();
-        } else {
-            loreList = (NbtList) displayNbt.get("Lore");
-        }
-        String lore = "\"(+"+text +")\"";
-
-        if (loreList != null && !loreList.contains(NbtString.of(lore))) loreList.add(NbtString.of(lore));
-        displayNbt.put("Lore", loreList);
-        itemStack.setSubNbt("display", displayNbt);
+        itemStack.apply(
+                DataComponentTypes.LORE,
+                LoreComponent.DEFAULT,
+                comp -> {
+                    return comp.with(Text.of("\"(+"+text +")\""));
+                });
     }
 
     public static boolean isEmpty(ItemStack itemStack) {

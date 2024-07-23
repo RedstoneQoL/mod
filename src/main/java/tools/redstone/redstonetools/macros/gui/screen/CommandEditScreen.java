@@ -58,6 +58,11 @@ public class CommandEditScreen extends GameOptionsScreen {
     }
 
     @Override
+    protected void addOptions() {
+
+    }
+
+    @Override
     public void close() {
         super.close();
         commandField.setFocused(false);

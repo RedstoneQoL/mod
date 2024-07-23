@@ -44,9 +44,9 @@ public class MacroListWidget extends AlwaysSelectedEntryListWidget<MacroEntry> {
         return macroFromName == null || macro.isCopyOf(macroFromName);
     }
 
-    protected int getScrollbarPositionX() {
-        return super.getScrollbarPositionX() + 20;
-    }
+//    protected int getScrollbarPositionX() {
+//        return super.getScrollbarPositionX() + 20;
+//    }
 
 
 

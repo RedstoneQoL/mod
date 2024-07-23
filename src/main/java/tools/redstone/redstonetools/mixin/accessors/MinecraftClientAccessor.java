@@ -3,6 +3,7 @@ package tools.redstone.redstonetools.mixin.accessors;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
@@ -10,6 +11,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface MinecraftClientAccessor {
 
     @Invoker("addBlockEntityNbt")
-    void invokeAddBlockEntityNbt(ItemStack stack, BlockEntity blockEntity);
+    void invokeAddBlockEntityNbt(ItemStack stack, BlockEntity blockEntity, DynamicRegistryManager registryManager);
 
 }

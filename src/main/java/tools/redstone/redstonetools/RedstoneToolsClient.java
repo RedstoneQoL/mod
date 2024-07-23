@@ -33,8 +33,7 @@ public class RedstoneToolsClient implements ClientModInitializer {
 
         // Register arguments
         ReflectionUtils.getAllArguments().forEach(argument -> {
-            var nestedClasses = (Class<ArgumentSerializer>[]) argument
-                    .getDeclaredClasses();
+            var nestedClasses = (Class<ArgumentSerializer>[]) argument.getDeclaredClasses();
 
             if (nestedClasses.length == 0) {
                 LOGGER.error("Failed to register {} because no serializer nested class was found",
@@ -42,7 +41,7 @@ public class RedstoneToolsClient implements ClientModInitializer {
                 return;
             }
 
-            Identifier id = new Identifier(MOD_ID, argument.getSimpleName().toLowerCase());
+            Identifier id = Identifier.of(MOD_ID, argument.getSimpleName().toLowerCase());
 
             try {
                 var serializer = nestedClasses[0].getDeclaredConstructor().newInstance();
@@ -68,7 +67,7 @@ public class RedstoneToolsClient implements ClientModInitializer {
                         feature.getName());
                 return;
             }
-            feature.register();
+//            feature.register();
         });
     }
 
